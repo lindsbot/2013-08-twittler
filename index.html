@@ -3,24 +3,143 @@
   <head>
     <script src="jquery.js"></script>
     <script src="data_generator.js"></script>
+    <script src="timeago.js"></script>
+    <style>
+      #header {
+        width: 500px;
+        margin: auto;
+        height: 100px;
+        background-color: teal;
+        color: white;
+        font-family: sans-serif;
+        font-size: 3em;
+        text-align: center;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+
+      #header > span {
+        display: inline-block;
+        margin-top: 17px;
+      }
+
+      #container, #seeMore {
+        margin: auto;
+        width: 500px;
+      }
+
+      #seeMore {
+        background-color: #eeeeee;
+        margin-bottom: 15px;
+        padding: 5px;
+        border-radius: 7px;
+      }
+
+      .tweet {
+        width: auto;
+        padding: 5px;
+        min-height: 50px;
+        margin-bottom: 10px;
+        background-color: #6699CC;
+        border-radius: 7px;
+        color: #003366;
+      }
+
+      .timestamp {
+        font-size: small;
+      }
+
+
+
+    </style>
   </head>
   <body>
+
+    <div id="header"><span>Twittler<span></div>
+
+    <div id="seeMore">Click here for more tweets</div>
+
+    <div id="container">
+    </div>
+
+
+
     <script>
 
       $(document).ready(function(){
-        var $body = $('body');
-        $body.html('');
+
+        $.timeago.settings.allowFuture = true;
+
+        var $container = $("#container");
+        $container.html('');
+
 
         var index = streams.home.length - 1;
-        while(index >= 0){
-          var tweet = streams.home[index];
-          var $tweet = $('<div></div>');
-          $tweet.text('@' + tweet.user + ': ' + tweet.message);
-          $tweet.appendTo($body);
-          index -= 1;
+        var count = 0;
+        var newTweets = [];
+        var allTweets = [];
+
+
+        function checkForNew() {
+          newTweets = [];
+          index = streams.home.length - 1;
+          for (var i = count; i < index; i++){
+              var tweet = streams.home[i];
+              newTweets.push(tweet);
+          }
+          return newTweets;
+        } 
+
+        function displayNew(array) {
+          for (var i = 0; i < array.length; i++) {
+            var tweet = array[i];
+            var $tweet = $("<div class='tweet'></div>");
+            var timestamp = $.timeago(tweet.created_at);
+            var $timestamp = $("<div class='timestamp'></div>");
+            $tweet.text("@" + tweet.user + ": " + tweet.message);
+            $tweet.prependTo($container);
+            $timestamp.text(timestamp);
+            $timestamp.appendTo($tweet);
+
+            allTweets.push(tweet);
+
+            count++;
+
+          }
+
         }
 
+        var newTweets = checkForNew();
+        displayNew(newTweets);
+
+
+        window.setInterval(function(){
+
+          function updateTimestamps() {
+            $($(".timestamp").get().reverse()).each(function(key) {
+              var timestamp = $.timeago(allTweets[key].created_at);
+              $(this).text(timestamp);
+            });
+          }
+
+          updateTimestamps();
+
+
+        $("#seeMore").on("click", function(){
+          var newTweets = checkForNew();
+          displayNew(newTweets);
+        });
+
+
+
+        }, 5000);
+
+
+
+
       });
+        
+
 
     </script>
   </body>
